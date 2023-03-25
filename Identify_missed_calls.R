@@ -6,11 +6,11 @@
 #sz_top
 #sz_bot
 
+
+#Input the game dataframe and filtered (TRUE means only the missed calls are displayed, FALSE means all calls)
+#Output is game dataframe with a column "flag" that is 1 if the pitch is a missed call and 0 otherwise
 missed_calls <- function(df, filtered = FALSE) {
   df <- df %>%
-    # mutate(flag = case_when(description == "ball" & zone <= 9 ~ 1,
-    #                         description == "called_strike" & zone > 9 ~ 1,
-    #                         TRUE ~ 0))
     mutate(
            horiz_ball = case_when(abs(plate_x) > ((8.5+1.45)/12) ~ 1,
                                   TRUE ~ 0),
@@ -35,6 +35,6 @@ missed_calls <- function(df, filtered = FALSE) {
   return(df)
 }
 
-view(missed_calls(NYY_at_MIL_9_16_22, filtered = T)) #we say 24, US says 22
-view(missed_calls(SFG_at_ATL_6_22_22, filtered = T)) #we say 8, US says 5
+view(missed_calls(NYY_at_MIL_9_16_22, filtered = T)) #we say 24, Umpire Scorecards says 22
+view(missed_calls(SFG_at_ATL_6_22_22, filtered = T)) #we say 8, Umpire Scorecards says 5
 
