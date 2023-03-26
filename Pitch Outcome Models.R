@@ -363,7 +363,7 @@ ratios <- bip_pitches %>%
   dplyr::summarise(hr_ratio = mean(home_run), num_instances = n())
 
 model_table_hr <- ratios %>%
-  filter(num_instances >= 300 & hitter_hr_pct > 0 & pitcher_hr_pct > 0 & hr_ratio > 0)
+  filter(num_instances >= 300 & hitter_hr_pct > 0  & hr_ratio > 0)
 
 # ggplot(model_table_hr, aes(x = hitter_hr_pct, y = pitcher_hr_pct, fill = hr_ratio)) +
 #   geom_tile()
@@ -535,5 +535,4 @@ summary(hr_model)
 summary(gro_model)
 summary(flo_model)
 summary(pop_model)
-
 
