@@ -1,3 +1,7 @@
+# Code to initialize all pitch outcome models for WashU's 2023 SABR Case Competition entry.
+# The github repository for all code can be found at https://github.com/jengelberg/WashUWinningSABR2023Entry
+# Created by Cooper Yan. Jake Engelberg, Max Hanley, and Simon Todreas
+
 #General format
 #
 # ratios <- dataframe grouping by model parameters with outcome_ratio representing the 
