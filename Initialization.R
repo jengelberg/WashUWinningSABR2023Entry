@@ -6,7 +6,7 @@ library(ltm)
 
 # Code to download and clean the data, and initialize all functions necessary to run WashU's 2023 SABR Case Competition entry.
 # The github repository for all code can be found at https://github.com/jengelberg/WashUWinningSABR2023Entry
-# Created by Cooper Yan. Jake Engelberg, Max Hanley, and Simon Todreas
+# Created by Cooper Yan, Jake Engelberg, Max Hanley, and Simon Todreas
 
 # Set working directory. Replace the below filepath with the path to the github repository:
 setwd("/Users/maxhanley/Desktop/Work/SABR 2023/WashU SABR 2023 Winning Entry")
@@ -22,8 +22,6 @@ SFG_at_ATL = FALSE
 # pitches_2021 and pitches_2022 contain pitch-level data from those respective years. This will
 # take a few minutes to run.
 total_pitches = read.csv("WashU SABR 2023 Winning Entry Data/total_pitches.csv")
-pitches_2021 = read.csv("WashU SABR 2023 Winning Entry Data/pitches_2021.csv")
-pitches_2022 = read.csv("WashU SABR 2023 Winning Entry Data/pitches_2022.csv")
 total_pitches2 = total_pitches # preserving the original dataframe
 
 # Read in raw game-level statcast data.
@@ -51,11 +49,10 @@ rep_str = c('blocked_ball'='ball',
             "bunt_swinging_strike" = "swinging_strike",
             "foul_ball" = "foul")
 total_pitches$description <- str_replace_all(total_pitches$description, rep_str)
-pitches_2021$description <- str_replace_all(pitches_2021$description, rep_str)
-pitches_2022$description <- str_replace_all(pitches_2022$description, rep_str)
 
-# Remove instances of pitchers hitting and position players pitching in all 3 dataframes
-hitting_pitchers <- total_pitches %>%  mutate(found = batter %in% pitcher)
+### Remove instances of pitchers hitting and position players pitching in all 3 dataframes
+#Create player_key of players that both pitched and hit in our dataset
+hitting_pitchers <- total_pitches %>% mutate(found = batter %in% pitcher)
 temp_batter = hitting_pitchers %>% 
   group_by(batter) %>% 
   summarise(num_pitches_batter = n()) 
@@ -65,51 +62,23 @@ temp_pitcher = hitting_pitchers %>%
   group_by(pitcher) %>% 
   summarise(num_pitches_pitcher = n()) 
 player_key <- inner_join(temp_batter, temp_pitcher, by = c("batter" = "pitcher")) %>% 
-  filter(batter != "660271" & batter != "547179")
+  filter(batter != "660271" & batter != "547179") # Michael Lorenzen and Shohei Ohtani are manually removed as two way players
 
+#Infer which players had instances of position players pitching versus pitchers hitting
 position_players_pitching <- player_key %>% filter(num_pitches_batter > num_pitches_pitcher)
 pitchers_hitting <- player_key %>% filter(num_pitches_pitcher > num_pitches_batter)
 
+#Filter out position players pitching and pitchers hitting
 total_pitches <- total_pitches %>% 
   filter(!batter %in% pitchers_hitting$batter) %>% 
   filter(!pitcher %in% position_players_pitching$batter) %>%
-  filter(balls < 4 & strikes < 3)
+  filter(balls < 4 & strikes < 3) #remove obvious data errors
 
-hitting_pitchers <- pitches_2021 %>%  mutate(found = batter %in% pitcher)
-temp_batter = hitting_pitchers %>% 
-  group_by(batter) %>% 
-  summarise(num_pitches_batter = n()) 
-temp_pitcher = hitting_pitchers %>% 
-  group_by(pitcher) %>% 
-  summarise(num_pitches_pitcher = n()) 
-player_key <- inner_join(temp_batter, temp_pitcher, by = c("batter" = "pitcher")) %>% 
-  filter(batter != "660271" & batter != "547179")
-
-position_players_pitching <- player_key %>% filter(num_pitches_batter > num_pitches_pitcher)
-pitchers_hitting <- player_key %>% filter(num_pitches_pitcher > num_pitches_batter)
-
-pitches_2021 <- pitches_2021 %>% 
-  filter(!batter %in% pitchers_hitting$batter) %>% 
-  filter(!pitcher %in% position_players_pitching$batter) %>%
-  filter(balls < 4 & strikes < 3)
-
-hitting_pitchers <- pitches_2022 %>%  mutate(found = batter %in% pitcher)
-temp_batter = hitting_pitchers %>% 
-  group_by(batter) %>% 
-  summarise(num_pitches_batter = n()) 
-temp_pitcher = hitting_pitchers %>% 
-  group_by(pitcher) %>% 
-  summarise(num_pitches_pitcher = n()) 
-player_key <- inner_join(temp_batter, temp_pitcher, by = c("batter" = "pitcher")) %>% 
-  filter(batter != "660271" & batter != "547179")
-
-position_players_pitching <- player_key %>% filter(num_pitches_batter > num_pitches_pitcher)
-pitchers_hitting <- player_key %>% filter(num_pitches_pitcher > num_pitches_batter)
-
-pitches_2022 <- pitches_2022 %>% 
-  filter(!batter %in% pitchers_hitting$batter) %>% 
-  filter(!pitcher %in% position_players_pitching$batter) %>%
-  filter(balls < 4 & strikes < 3)
+#Create dataframes for specific years
+pitches_2021 = total_pitches %>%
+  filter(game_year == 2021)
+pitches_2022 = total_pitches %>%
+  filter(game_year == 2022)
 
 #Input the game dataframe and filtered (TRUE means only the missed calls are displayed, FALSE means all calls)
 #Output is game dataframe with a column "flag" that is 1 if the pitch is a missed call and 0 otherwise
@@ -131,7 +100,7 @@ missed_calls <- function(df, filtered = FALSE) {
     df <- df %>%
       filter(flag == 1) %>%
       dplyr::select(batter, pitcher...8, events, description, des, on_1b, on_2b, on_3b, balls, strikes, outs_when_up, inning, inning_topbot, home_score, away_score, flag)
-
+    
   }
   return(df)
 }
@@ -139,6 +108,7 @@ missed_calls <- function(df, filtered = FALSE) {
 missed_calls_NYY_at_MIL <- missed_calls(NYY_at_MIL_9_16_22, filtered = FALSE) #we say 24, US says 22
 missed_calls_SFG_at_ATL <- missed_calls(SFG_at_ATL_6_22_22, filtered = FALSE) #we say 8, US says 5
 
+#These are bench players who were available to appear in the relevant games
 extra_batters <- as.data.frame(as.matrix(c(
   592200, 
   518595, 628338, 645801, 
@@ -149,7 +119,9 @@ extra_batters <- as.data.frame(as.matrix(c(
                           batter == 518595 ~ "ATL",
                           batter == 628338 ~ "ATL",
                           batter == 645801 ~ "ATL",
-                          TRUE ~ "MIL"))
+                          TRUE ~ "MIL"))  #game refers to the home team of the game, not the team the player is on
+
+#All batters who can appear in the two games
 batter_rosters <- rbind(SFG_at_ATL_6_22_22 %>%
                           group_by(batter) %>%
                           summarise(batter = mean(batter)) %>%
@@ -160,6 +132,7 @@ batter_rosters <- rbind(SFG_at_ATL_6_22_22 %>%
                           mutate(game = "MIL"),
                         extra_batters)
 
+#Available relievers for any of the 4 teams for their respective game
 extra_pitchers <- as.data.frame(as.matrix(c(
   666808, 608678, 669674, 641793, 606424,
   543521, 445926, 445276, 669276, 503285, 623451,
@@ -167,6 +140,7 @@ extra_pitchers <- as.data.frame(as.matrix(c(
   608718, 606131, 665001, 456713))) %>%
   rename("pitcher" = "V1")
 
+#All pitchers who can appear in the two games
 pitcher_rosters <- rbind(
   SFG_at_ATL_6_22_22 %>%
     group_by(pitcher...8) %>%
@@ -179,6 +153,7 @@ pitcher_rosters <- rbind(
   extra_pitchers
 )
 
+###Identify batter and pitcher handedness
 
 temp_batters <- total_pitches %>%
   dplyr::select(batter, stand) %>%
@@ -187,6 +162,7 @@ temp_batters <- total_pitches %>%
 
 switch_hitters <- temp_batters$batter[duplicated(temp_batters$batter)]
 
+# Adding batter handedness to the roster
 batter_rosters <- batter_rosters %>%
   left_join(total_pitches %>%
               dplyr::select(batter, stand) %>%
@@ -196,6 +172,7 @@ batter_rosters <- batter_rosters %>%
                                        TRUE ~ stand)) %>%
               unique())
 
+# Adding pitcher handedness to the roster
 pitcher_rosters <- pitcher_rosters %>%
   left_join(total_pitches %>%
               dplyr::select(pitcher, p_throws) %>%
@@ -204,39 +181,15 @@ pitcher_rosters <- pitcher_rosters %>%
               unique())
 
 
-pitches_2022$description <- str_replace_all(pitches_2022$description, rep_str)
-pitches_2021$description <- str_replace_all(pitches_2021$description, rep_str)
-hitting_pitchers <- rbind(pitches_2022, pitches_2021) %>% mutate(found = batter %in% pitcher)
-temp_batter = hitting_pitchers %>% 
-  group_by(batter) %>% 
-  summarise(num_pitches_batter = n()) 
-temp_pitcher = hitting_pitchers %>% 
-  group_by(pitcher) %>% 
-  summarise(num_pitches_pitcher = n()) 
-player_key <- inner_join(temp_batter, temp_pitcher, by = c("batter" = "pitcher")) %>% 
-  filter(batter != "660271" & batter != "547179")
-
-position_players_pitching <- player_key %>% filter(num_pitches_batter > num_pitches_pitcher)
-pitchers_hitting <- player_key %>% filter(num_pitches_pitcher > num_pitches_batter)
-
-pitches_2022 <- pitches_2022 %>% 
-  filter(!batter %in% pitchers_hitting$batter) %>% 
-  filter (!pitcher %in% position_players_pitching$batter)
-
-pitches_2021 <- pitches_2021 %>% 
-  filter(!batter %in% pitchers_hitting$batter) %>% 
-  filter (!pitcher %in% position_players_pitching$batter)
-
-
+#Create dataframe with descriptions of ball in play events
 bip_pitches_2022 <- rbind(pitches_2022, pitches_2021) %>%
-  filter(
+  filter(  #filter for balls hit into play and remove rare events
     description == "hit_into_play",
     events != "catcher_interf",
     events != "field_error",
     grepl("batter interference", des) == FALSE
   ) %>%
-  #  dplyr::select(events, des) %>%
-  mutate(
+  mutate(  #simplify outcomes
     outcome = case_when(
       events == "single" ~ "single",
       events == "double" ~ "double",
@@ -259,6 +212,9 @@ bip_pitches_2022 <- rbind(pitches_2022, pitches_2021) %>%
       TRUE ~ ""
     )
   ) 
+
+#this update of batter rosters calculates the proportion of pitches (for pitch level outcomes) or
+#  balls hit into play that end in each outcome for each batter
 
 batter_rosters <- batter_rosters %>%
   left_join(rbind(pitches_2022, pitches_2021) %>%
@@ -296,6 +252,8 @@ batter_rosters <- batter_rosters %>%
                         pop_pct = mean(hitter_pop_pct),
                         line_pct = mean(hitter_line_pct)), 
             by = "batter")
+
+# The corresponding update for pitcher rosters
 
 pitcher_rosters <- pitcher_rosters %>%
   left_join(rbind(pitches_2022, pitches_2021) %>%
@@ -335,6 +293,8 @@ pitcher_rosters <- pitcher_rosters %>%
             by = "pitcher")
 
 #Normalize data
+
+#these values are from the stability analysis done in Stablity Analysis.R
 stabil_points <- data.frame(position = c("batter", "pitcher"),
                             ss = c(190, 470),
                             cs = c(370, 1450),
@@ -349,6 +309,7 @@ stabil_points <- data.frame(position = c("batter", "pitcher"),
                             pop = c(310, 410),
                             line = c(NaN, NaN))
 
+#Calculating league-wide averages for every outcome
 total_pitches_sum <- rbind(pitches_2022, pitches_2021) %>%
   dplyr::select(description) %>%
   group_by(description) %>%
@@ -381,9 +342,12 @@ outcome_total_prob <- outcome_total_prob2 %>%
   dplyr::select(-c(triple, hit_by_pitch)) %>%
   mutate(position = "lg_avg_rate")
 
+#This dataframe will be used to normalize the inputs into the pitch model
 lg_avgs_and_wghts <- rbind(stabil_points, outcome_total_prob)
 
 
+#This version of batter rosters regresses the players' outcome proportions to the league average according to
+# the dataframe above
 batter_rosters2 <- batter_rosters %>%
   dplyr::select(-c(hbp_pct, d2_pct, line_pct)) %>%
   mutate(ss_pct = (ss_pct*num_pitches + lg_avgs_and_wghts$ss[1]*
@@ -417,9 +381,11 @@ batter_rosters2 <- batter_rosters %>%
                       lg_avgs_and_wghts$pop[3])/
            (num_pitches_ip+lg_avgs_and_wghts$pop[1]))
 
+#Pulling park adjustments
 fg_park_hand <- fg_park_hand(2022)
 fg_park <- fg_park(2022)
 
+#This is the final version of batter rosters and it is park adjusted
 batter_rosters3 <- batter_rosters2 %>%
   mutate(s1_pct = case_when(game == "ATL" & stand == "R" ~ 
                               s1_pct*fg_park_hand$single_as_RHH[16]/100,
@@ -472,7 +438,8 @@ batter_rosters3 <- batter_rosters2 %>%
          hbp_pct = outcome_total_prob2$hit_by_pitch[1],
          line_pct = outcome_total_prob2$line_out[1])
 
-
+#This is the final version of pitcher roster and it is regressed to the league average rate.
+# It is not park adjusted in order to not double count the effect
 pitcher_rosters3 <- pitcher_rosters %>%
   dplyr::select(-c(hbp_pct, d2_pct, line_pct)) %>%
   mutate(ss_pct = (ss_pct*num_pitches + lg_avgs_and_wghts$ss[2]*
@@ -507,7 +474,10 @@ pitcher_rosters3 <- pitcher_rosters %>%
            (num_pitches_ip+lg_avgs_and_wghts$pop[2]))
 
 
-rm(hitting_pitchers, pitchers_hitting, player_key, position_players_pitching, temp_batter, temp_pitcher)
+#remove unnecessary variables
+rm(hitting_pitchers, pitchers_hitting, player_key, position_players_pitching, temp_batter, temp_pitcher,
+   batter_rosters, batter_rosters2, pitcher_rosters)
+
 # Game Level Initialization [RUN SECOND] --------------
 # Cleans the game level data for use in the simulation. This code must be run each time the game chosen
 # to simulate is changed.
@@ -519,18 +489,18 @@ if(NYY_at_MIL == TRUE){
   homeBattingOrder <- c("592885", "642715", "642133", "592669", "543939", "457705", "607054", "553882", "669003")
   home_bullpen <<- brewers_bullpen
   road_bullpen <<- yankees_bullpen
-  }
+}
 if (SFG_at_ATL == TRUE){
-original_game_data <- missed_calls_SFG_at_ATL
-roadBattingOrder <- c("592626","573262","527038","474832","573131","446334","600303","642731","642851")
-homeBattingOrder <- c("660670","621020","542303","621566","661388","606115","594807","594838","671739")
-home_bullpen <<- braves_bullpen
-road_bullpen <<- giants_bullpen
+  original_game_data <- missed_calls_SFG_at_ATL
+  roadBattingOrder <- c("592626","573262","527038","474832","573131","446334","600303","642731","642851")
+  homeBattingOrder <- c("660670","621020","542303","621566","661388","606115","594807","594838","671739")
+  home_bullpen <<- braves_bullpen
+  road_bullpen <<- giants_bullpen
 }
 
 #Divide the original game data into top and bottom splits
-rat_bats <- original_game_data[original_game_data$inning_topbot == "Top",]
-hat_bats <- original_game_data[original_game_data$inning_topbot == "Bot",]
+rat_bats <- original_game_data[original_game_data$inning_topbot == "Top",] #road at bats
+hat_bats <- original_game_data[original_game_data$inning_topbot == "Bot",] #home at bats
 rat_bats <- rat_bats %>% rename("pitcher" = "pitcher...8")
 hat_bats <- hat_bats %>% rename("pitcher" = "pitcher...8")
 real_road_state <- rat_bats[c("batter", "pitcher", "events", "description", "des", "on_1b","on_2b", "on_3b", "balls", "strikes", "outs_when_up", "inning","inning_topbot", "away_score", "flag")]
@@ -646,8 +616,6 @@ pitching_change <- function(sim_game){
   # Check to see if current pitcher is a starter
   if(sim_game$pitcher == 605288 || sim_game$pitcher == 593423 || sim_game$pitcher == 450203){
     # If they're a starter, see if they potentially need to be swapped this inning
-    #print(inning)
-    #print(paste(sim_game$pitcher))
     if(rng  < starters[inning,paste(sim_game$pitcher)]){
       # pull them
       sim_game = switch_pitcher(sim_game)
@@ -1127,7 +1095,6 @@ if(SFG_at_ATL == TRUE){
   sim_game_state_bottom$outcome = "ball"
   sim_game_state_bottom$strikes = sim_game_state_bottom$balls+1
 }
-
 
 
 
