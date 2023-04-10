@@ -5,7 +5,7 @@
 #To Run 1 Simulation:
 #1) Run Initialization.R in its entirety (and specify which game to simulate)
 #2) Run Pitch Outcome Models.R in its entirety
-#3) Run this file in its entirety to initialize the simulation. Then run line 429 again to run additional simulations of the same game.
+#3) Run this file in its entirety to initialize the simulation. Then run line 423 again to run additional simulations of the same game.
 #   if you would like to switch games, toggle the option in Initialization.R, re-run the Game Level Initialization, then re-run line 429
 
 # GAME ------------
@@ -21,7 +21,7 @@ game <- function(sim_game_state_top, sim_game_state_bottom, real_road_state, rea
     sim_game_state_top <- half_inning(sim_game_state_top, real_road_state, 0, top = TRUE)
     sim_game_state_top$inning = sim_game_state_top$inning + 1
   }
-
+  
   while(sim_game_state_bottom$inning <= 8){
     sim_game_state_bottom <- half_inning(sim_game_state_bottom, real_home_state, sim_game_state_top$score, top = FALSE)
     sim_game_state_bottom$inning = sim_game_state_bottom$inning + 1
@@ -60,7 +60,7 @@ half_inning <- function(sim_game, real_game_state, roadScore, top) {
   if(sim_game$inning > 9){sim_game$on_2b = 1}
   
   while(sim_game$outs < 3){
-
+    
     sim_game <- plate_appearance(sim_game,real_game_state)
     
     if(sim_game$outcome == "single"){
@@ -173,7 +173,7 @@ half_inning <- function(sim_game, real_game_state, roadScore, top) {
       if((sim_game$score+score > roadScore)){
         sim_game$outs = 3}}
     
-
+    
     
   }
   sim_game$outs = 0
@@ -184,13 +184,19 @@ half_inning <- function(sim_game, real_game_state, roadScore, top) {
 }
 
 #PLATE APPEARANCE --------
+# This function simulates the result of a plate appearance by repeatedly calling the pitch function and tracking the count until a
+# outcome is reached. Like the other functions it takes the sim_game state and the real_game state as paramters, and returns
+# the updated sim_game
+
 plate_appearance <- function(sim_game, real_game) {
   while (sim_game$balls < 4 & sim_game$strikes < 3) {
     sim_game$outcome = pitch(sim_game$balls, sim_game$strikes, sim_game$pitcher, sim_game$batter)
-
+    
     sim_game$pitch_count <- sim_game$pitch_count + 1
     
-    # check if we can rejoin the timeline
+    # This is where we check to see if it is possible to rejoin the original timeline. If at any point the real_game state matches
+    # the current sim_game, we set the sim_game equal to the game state of the next missed call in the real timeline following the
+    # matched state, then continue that plate appearance
     if(sim_game$inning < 9){
       if(any(apply(real_game[c("batter", "pitcher", "on_1b","on_2b", "on_3b", "balls", "strikes", "outs", "inning", "order_spot", "score")], 1, function(row) identical(row, sim_game[c("batter", "pitcher", "on_1b","on_2b", "on_3b", "balls", "strikes", "outs", "inning", "order_spot", "score")])))){
         match <- which(apply(real_game, 1, identical, sim_game))
@@ -198,9 +204,8 @@ plate_appearance <- function(sim_game, real_game) {
         sim_game = real_game[next_missed_call_index,]
         if(sim_game$outcome == "called_strike" || sim_game$outcome == "swinging_strike"){sim_game$outcome = "ball"}
         else if (sim_game$outcome == "ball"){sim_game$outcome == "strike"}}
-      
     }
-    
+    # Update the count
     if(sim_game$outcome == "called_strike" || sim_game$outcome == "swinging_strike") {
       sim_game$strikes = sim_game$strikes + 1
     } else if (sim_game$outcome == "ball") {
@@ -215,6 +220,7 @@ plate_appearance <- function(sim_game, real_game) {
       return(sim_game)
     }
   }
+  # The pitch model only outputs hits or count changes, so these check for strikeouts and walks
   if(sim_game$balls == 4) {
     sim_game$outcome = "walk"
     sim_game$strikes = 0
@@ -228,15 +234,18 @@ plate_appearance <- function(sim_game, real_game) {
   }
 }
 #PITCH ------------
+# The pitch model is the base case of our function. It takes in the current count, pitcher, and hitter and uses the pitch models
+# created in Pitch Outcome Models.R to return the outcome of that pitch
 pitch <- function(balls,
                   strikes,
                   onMound,
                   hitter) {
   
-  
+  # Get the batter and pitcher's statistics
   current_batter <- batter_rosters3[batter_rosters3$batter == hitter,]
   current_pitcher <- pitcher_rosters3[pitcher_rosters3$pitcher == onMound,]
   
+  # Define whether there is a platoon advantage (we assume switch hitters always opt for the platoon advantage)
   platoon = ifelse(current_batter$stand == current_pitcher$p_throws, 0, 1)
   platoon = ifelse(current_batter$stand == "S", 1, 0)
   p_throws = current_pitcher$p_throws
@@ -250,7 +259,7 @@ pitch <- function(balls,
   }
   handedness = paste(p_throws, stand, sep = "_")
   
-  
+  # Calculate the probabilities of each outcome, given the pitcher and hitter statistics
   ss_temp <-
     data.frame(
       "count" = count, 
@@ -310,6 +319,7 @@ pitch <- function(balls,
   hbp_prob_odds = hbp_prob_odds / total_prob_odds
   hit_prob_odds = hit_prob_odds / total_prob_odds
   
+  # Use the probabilites calculated above to determine the outcome of the pitch
   rng = runif (1)
   if (rng < ss_prob_odds) {
     outcome = "swinging_strike"
@@ -325,8 +335,6 @@ pitch <- function(balls,
   } else{
     outcome = "balls_in_play"
   }
-  
-  #p_throws, "stand" = current_batter$stan
   if (outcome == "balls_in_play") {
     s1_temp <-
       data.frame(
@@ -410,32 +418,6 @@ pitch <- function(balls,
   
   return(outcome)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #RUN SIMULATION -------
 game(sim_game_state_top, sim_game_state_bottom, real_road_state, real_home_state)
