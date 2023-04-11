@@ -8,8 +8,8 @@ library(ltm)
 # The github repository for all code can be found at https://github.com/jengelberg/WashUWinningSABR2023Entry
 # Created by Cooper Yan, Jake Engelberg, Max Hanley, and Simon Todreas
 
-# Set working directory. Replace the below filepath with the path to the github repository:
-setwd("/Users/maxhanley/Desktop/Work/SABR 2023/WashU SABR 2023 Winning Entry")
+# Set working directory. Replace the below filepath with the path to the downloaded unzipped file:
+setwd("/Users/kids/Downloads/WashU SABR 2023 Winning Entry Data")
 
 #Toggle which game to simulate
 NYY_at_MIL = TRUE
@@ -18,22 +18,21 @@ SFG_at_ATL = FALSE
 # Pitch Level Initialization [RUN FIRST] ---------------------
 # Cleans the season and pitch level data files. The code in this block only needs to be run once on setup.
 
-# Read in raw pitch-level statcast data. total_pitches contains combined data from 2017-2022, whereas
-# pitches_2021 and pitches_2022 contain pitch-level data from those respective years. This will
+# Read in raw pitch-level statcast data. total_pitches contains combined data from 2017-2022. This will
 # take a few minutes to run.
-total_pitches = read.csv("WashU SABR 2023 Winning Entry Data/total_pitches.csv")
+total_pitches = read.csv("total_pitches.csv")
 total_pitches2 = total_pitches # preserving the original dataframe
 
 # Read in raw game-level statcast data.
-NYY_at_MIL_9_16_22 <- read_csv("WashU SABR 2023 Winning Entry Data/NYY at MIL 9-16-22.csv")
-SFG_at_ATL_6_22_22 <- read_csv("WashU SABR 2023 Winning Entry Data/SFG at ATL 6-22-22.csv")
+NYY_at_MIL_9_16_22 <- read_csv("NYY at MIL 9-16-22.csv")
+SFG_at_ATL_6_22_22 <- read_csv("SFG at ATL 6-22-22.csv")
 
 # Read in bullpen and starting pitching data
-giants_bullpen <- readxl::read_excel("WashU SABR 2023 Winning Entry Data/bullpens/giants.xlsx")
-braves_bullpen <- readxl::read_excel("WashU SABR 2023 Winning Entry Data/bullpens/braves.xlsx")
-yankees_bullpen <- readxl::read_excel("WashU SABR 2023 Winning Entry Data/bullpens/yankees.xlsx")
-brewers_bullpen <- readxl::read_excel("WashU SABR 2023 Winning Entry Data/bullpens/brewers.xlsx")
-starters <- readxl::read_excel("WashU SABR 2023 Winning Entry Data/bullpens/starters.xlsx")
+giants_bullpen <- readxl::read_excel("bullpens/giants.xlsx")
+braves_bullpen <- readxl::read_excel("bullpens/braves.xlsx")
+yankees_bullpen <- readxl::read_excel("bullpens/yankees.xlsx")
+brewers_bullpen <- readxl::read_excel("bullpens/brewers.xlsx")
+starters <- readxl::read_excel("bullpens/starters.xlsx")
 
 # Clean total_pitches
 total_pitches <- total_pitches %>% mutate_at(c("batter", "pitcher"), as.integer)
@@ -751,7 +750,8 @@ p_tot_post_s1 = p_tot %>%
          outs_post_s1 = outs_when_up,
          inning_post = inning,
          post_field_score = fld_score) %>%
-  dplyr::select(on_3b_post, on_2b_post, on_1b_post, outs_post_s1, inning_post, inning_topbot_post)
+  dplyr::select(on_3b_post, on_2b_post, on_1b_post, outs_post_s1, 
+                inning_post, inning_topbot_post, post_field_score)
 
 p_tot_s1_bind <- cbind(p_tot_s1, p_tot_post_s1)
 
@@ -1017,7 +1017,7 @@ p_tot_post_gro = p_tot_o %>%
          inning_post = inning) %>%
   dplyr::select(on_3b_post, on_2b_post, on_1b_post, outs_post_gro, inning_post, inning_topbot_post)
 
-p_tot_gro_bind <- cbind(head(p_tot_gro, -1), p_tot_post_gro)
+p_tot_gro_bind <- cbind(head(p_tot_gro, -1), head(p_tot_post_gro, -1))
 
 p_tot_gro_full <- p_tot_gro_bind %>%
   filter(!(inning >= 9 & inning_post == 1)) %>%
