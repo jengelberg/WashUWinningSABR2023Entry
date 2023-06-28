@@ -53,37 +53,36 @@ We also included functions in our simulation to determine baserunning and pitchi
 For pitching changes, we made a function that selected whether a starting pitcher will be pulled based on how often they were removed in that inning given they made it through the previous inning, and then which reliever will come in given that the pitcher was removed. We made several simplifications, namely that pitching changes only happen between innings and all relievers pitch exactly one inning. Which relief pitcher enters was determined based on how often they entered in that inning. For this function, only 2021-22 data was used to reflect current pitcher usage.
 
 ## Results
-9/16/22
-Yankees @ Brewers
-
-Actual Score:
-NYY 6 - MIL 7
 
 (WUSTL is our model for determining umpire's impact)
 
-WUSTL Mean Score:
+### 9/16/22 Yankees @ Brewers
+
+* Actual Score:
+NYY 6 - MIL 7
+
+* WUSTL Mean Score:
 NYY 4.72 - MIL 3.80
 
-WUSTL Median Score:
+* WUSTL Median Score:
 NYY 4 - MIL 3
 
-Win Percentages:
+* Win Percentages:
 NYY 58.59% - MIL 41.41%
 
 
 
-6/22/22
-Giants @ Braves
+### 6/22/22 Giants @ Braves
 
-Actual Score:
+* Actual Score:
 SFG 3 - ATL 4
 
-WUSTL Mean Score:
+* WUSTL Mean Score:
 SFG 4.01 - ATL 1.70
 
-WUSTL Median Score:
+* WUSTL Median Score:
 SFG 4 - ATL 1
 
-Win Percentages:
+* Win Percentages:
 SFG 88.88% - ATL 11.12%
 
