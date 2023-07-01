@@ -9,7 +9,7 @@ library(ltm)
 # Created by Cooper Yan, Jake Engelberg, Max Hanley, and Simon Todreas
 
 # Set working directory. Replace the below filepath with the path to the downloaded unzipped file:
-setwd("/Users/kids/Downloads/WashU SABR 2023 Winning Entry Data")
+setwd("<Your File Path>")
 
 #Toggle which game to simulate
 NYY_at_MIL = TRUE
