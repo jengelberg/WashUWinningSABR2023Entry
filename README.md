@@ -25,11 +25,18 @@ To Run 1 Simulation:
     - total_pitches.csv contains our entire training and testing set which is all regular season MLB pitches from 2017-22
     - the bullpens folder contains the initial probabilities that each starter is removed in each inning (starters.xlsx) and the initial probabilities that a given reliever enters in any inning
     - The two game spreadsheets are the initial datasets we were given that contain the pitch-by-pitch data for the relevant games
-4) In Initialization.R, change line 12 to reflect your working directory. The last layer should be the unzipped folder.
-5) Run Initialization.R in its entirety (and specify which game to simulate in lines 15-16)
-6) Run Pitch Outcome Models.R in its entirety
-7) Run Simulation.R to get the result of 1 simulation. The score will be displayed "road_score home_score". You can run line 423 again to get additional simulations of the same game.
-8) If you would like to see our stability analysis results, run the Stability Analysis.R file for whichever outcomes you are interested in.
+4) Open RStudio and make sure you have an updated version of R installed
+5) If you have not done so before, install the following packages
+    - baseballr (https://www.rdocumentation.org/packages/baseballr/versions/1.5.0)
+    - tidyverse (https://www.tidyverse.org/)
+    - jtools (https://cran.r-project.org/web/packages/jtools/index.html)
+    - caTools (https://cran.r-project.org/web/packages/caTools/index.html)
+    - ltm (https://cran.r-project.org/web/packages/ltm/index.html)
+7) In Initialization.R (found in Github), change line 12 to reflect your working directory. The last layer should be the unzipped folder.
+8) Run Initialization.R in its entirety (and specify which game to simulate in lines 15-16)
+9) Run Pitch Outcome Models.R in its entirety
+10) Run Simulation.R to get the result of 1 simulation. The score will be displayed "road_score home_score". You can run line 423 again to get additional simulations of the same game.
+11) If you would like to see our stability analysis results, run the Stability Analysis.R file for whichever outcomes you are interested in.
 
 Note: If you would like to switch games, toggle the option in Initialization.R (lines 15-16), re-run the Game Level Initialization, then re-run line 423
 
